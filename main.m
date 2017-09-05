@@ -8,4 +8,4 @@ init_Q = 1;
 % y(3)-> Q
 % y(4)-> x
 % y(5)-> z
-% y(6)-> theta
+% y(6)-> angle
