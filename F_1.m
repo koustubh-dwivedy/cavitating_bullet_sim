@@ -4,7 +4,7 @@
 % y(4)-> x
 % y(5)-> z
 % y(6)-> angle
-function vec = F(t,y)
+function vec = F_1(t,y)
 
 	c = 0;
 
@@ -21,29 +21,40 @@ function vec = F(t,y)
 	k = 0.82;
 	K = 2*pi;
 
-	sigma = (pressure - vap_pressure)/(0.5*rho*y(1)*y(1));
+	%sigma = (pressure - vap_pressure)/(0.5*rho*y(1)*y(1));
+	sigma = (pressure - vap_pressure)/(0.5*rho*1000000);
 	D_k = d*sqrt(k*(1 + sigma)/sigma); %might be wrong
 	l = (d/sigma)*sqrt(log(1/sigma));
 
 	l_cav = l*D_k*D_k/(cos(y(6))*(D_k*D_k + tan(y(6))*tan(y(6))*l*l));
 	if L <= l_cav
-		l_k = 0
+		l_k = 0;
 	else
 		l_k = L - l_cav;
 	end
 
-	x_intersec_coord = l*D_k*D_k/((D_k*D_k + tan(y(6))*tan(y(6))*l*l));
-	y_intersec_coord = l*D_k*D_k*tan(y(6))/((D_k*D_k + tan(y(6))*tan(y(6))*l*l));
-	theta = abs(y(6)) - abs(atan(-(x_intersec_coord - l/2)*(D_k*D_k/4)/((l*l/4)*y_intersec_coord)));
+	if l_k ~= 0
+		x_intersec_coord = l*D_k*D_k/((D_k*D_k + tan(y(6))*tan(y(6))*l*l));
+		y_intersec_coord = l*D_k*D_k*tan(abs(y(6)))/((D_k*D_k + tan(y(6))*tan(y(6))*l*l));
+		theta = abs(y(6)) - atan2(-(x_intersec_coord - l/2)*(D_k*D_k/4)/((l*l/4)*y_intersec_coord), 1);
+	else
+		theta = 0;
+	end
 
 	F1 = 16*y(3)*y(3)*(l_k^(7/2))/105 + (2/3)*y(2)*y(2)*(l_k^(3/2)) + (4/3)*y(2)*y(3)*L*(l_k^(3/2)) + (2/3)*y(3)*y(3)*L*L*(l_k^(3/2)) - (8/15)*y(3)*(l_k^(5/2))*(y(2) - y(3)*L);
 	F_nose = -0.5*rho*pi*r*r*k*(y(1)*y(1) + y(2)*y(2))*sqrt((k*k + 2*c*k)*(y(1)*y(1)/(y(1)*y(1) + y(2)*y(2))) + c*c);
-	F_x = (-0.5*rho*k*y(1)*y(1)*(r*r*acos((r - l_k*tan(theta))/r) - (r - l_k*tan(theta))*sqrt(d*l_k*tan(theta)))) + F_nose; %might be wrong coz of abs
-	F_z = -rho*k*F1*sqrt(d*tan(theta)); %might be wrong coz of abs
+	F_x = (-0.5*rho*k*y(1)*y(1)*(r*r*acos((r - l_k*tan(theta))/r) - (r - l_k*tan(theta))*sqrt(d*l_k*tan(theta)))) + F_nose;
+	F_z = -rho*k*F1*sqrt(d*tan(theta));
 
-	E1 = y(2)*y(2)*(l_k*l_k/2 - l_k*x_cm) + 2*y(2)*y(3)*(l_k*l_k*(L + x_cm) - l_k*l_k*l_k/3 - L*x_cm*l_k) + y(3)*y(3)*(L*L*l_k*l_k/2 - L*L*x_cm*l_k - 2*L*l_k*l_k*l_k/3 + L*x_cm*l_k*l_k + l_k*l_k*l_k*l_k/4 - l_k*l_k*l_k*x_cm/3); %might be wrong
-	E2 = (l_k*l_k*l_k/6 - l_k*l_k*x_cm/2)/tan(theta);
-	E3 = (l_k*l_k*l_k*(L + x_cm)/6 - l_k*l_k*l_k*l_k/12 - L*x_cm*l_k*l_k/2)/tan(theta);
+	if theta ~= 0
+		E1 = y(2)*y(2)*(l_k*l_k/2 - l_k*x_cm) + 2*y(2)*y(3)*(l_k*l_k*(L + x_cm) - l_k*l_k*l_k/3 - L*x_cm*l_k) + y(3)*y(3)*(L*L*l_k*l_k/2 - L*L*x_cm*l_k - 2*L*l_k*l_k*l_k/3 + L*x_cm*l_k*l_k + l_k*l_k*l_k*l_k/4 - l_k*l_k*l_k*x_cm/3); %might be wrong
+		E2 = (l_k*l_k*l_k/6 - l_k*l_k*x_cm/2)/tan(theta);
+		E3 = (l_k*l_k*l_k*(L + x_cm)/6 - l_k*l_k*l_k*l_k/12 - L*x_cm*l_k*l_k/2)/tan(theta);
+	else
+		E1 = 0;
+		E2 = 0;
+		E3 = 0;
+	end
 
 
 	vec(1) = (F_x/m) - y(2)*y(3) - (L - x_cm)*y(3)*y(3);
